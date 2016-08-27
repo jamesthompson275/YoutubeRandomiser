@@ -1,12 +1,19 @@
 {
 	// Required
 	"manifest_version": 2,
-	"name": "Youtube Randomiser",
-	"description": "Shuffle Youtube albums.",
+	"name": "YouTube Randomiser",
+	"description": "Shuffle YouTube albums.",
 	"version": "0.0.1",
+	"icons": { "128": "images/icon.png" },
 
 	"permissions":[
-		"https://www.youtube.com/",
-		"http://www.youtube.com/"
-	]
+		"tabs",
+		"https://www.youtube.com/*",
+		"http://www.youtube.com/*"
+	],
+	"browser_action": {
+		"default_title":"YouTube Randomiser",
+		"default_icon": "images/icon.png",
+		"default_popup": "popup.html"
+	}
 }

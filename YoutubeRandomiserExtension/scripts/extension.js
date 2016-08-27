@@ -79,6 +79,13 @@ function init(attempt = 0){
         return;
     }
 
+    // get songs
+    songs = getSongs();
+    if (!songs.length) {
+        console.warn('INIT: abort (no songs in description)');
+        return;
+    }
+
     // create DOM elements
     var btnStyle = 'class="yt-uix-button yt-uix-button-default yt-uix-button-size-default"';
     dom.title.after(`
@@ -126,9 +133,6 @@ function init(attempt = 0){
         return;
     }
 
-    // get songs
-    songs = getSongs();
-
     // populate songs table
     //TODO...
 
@@ -165,9 +169,49 @@ function bind() {
 }
 
 function getSongs() {
+    //
+    // get description parts
+    var s = '<p>' + dom.description[0].outerHTML.split('<br>').join('</p><p>') + '</p>';
+    var d = $.parseHTML(s);
+    var duration = api.getDuration();
 
-    // populate song array
-    //TODO...
+    if (!duration) {
+        console.error('INIT: failed to retrieve non-zero video duration');
+        return [];
+    }
+
+    songList = [];
+    d.forEach(function(p, i){
+        var a = $(p).find('a[href="#"]');
+        if (!a.length) return;
+        //
+        // get start time
+        var timeSplit = a[0].text.split(":");
+        var timeSplitLen = timeSplit.length;
+        var startTime = 0;
+        for (i = 0; i < timeSplitLen; i++) {
+            startTime += parseInt(timeSplit[i])*Math.pow(60,timeSplitLen-1-i);
+        }
+        //
+        // get song name
+        var name = $(p).contents().filter(function() {
+            return this.nodeType == 3;
+        }).text() || 'Unknown Song';
+        //
+        var song = {
+            idx: songList.length,
+            name: name,
+            startTime: startTime,
+            endTime: duration
+        };
+        songList.push(song);
+    });
+    for (i = 0; i < songList.length-1; i++) {
+        songList[i].endTime = songList[i+1].startTime;
+    }
+
+    console.log(songList);
+    return songList;
 }
 
 function unsort(array) {

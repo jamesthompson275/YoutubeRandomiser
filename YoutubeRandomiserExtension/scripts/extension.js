@@ -69,16 +69,15 @@ function bind() {
 
 function testEvents() {
     //run test code here
-    var songCount = $('#eow-description a[href="#"]').length;
-    var videoLength = api.getDuration();
-
-    var songStarts = getStartTimes(songCount);
-
-    console.log(songStarts); 
-    console.log(videoLength);
+    songStarts = getStartTimes();
+    songEnds = getEndTimes(songStarts);
+    console.log(songStarts);
+    console.log(songEnds);
+    
 }
 
-function getStartTimes(songCount) {
+function getStartTimes() {
+    var songCount = $('#eow-description a[href="#"]').length;
     var songStarts = [];
     for (song = 0; song < songCount; song++) {
         var timeSplit = $('#eow-description a[href="#"]')[song].text.split(":");
@@ -92,6 +91,24 @@ function getStartTimes(songCount) {
     return songStarts;
 }
 
+function getEndTimes(songStarts) {
+    var songEnds = [];
+    var songCount = songStarts.length;
+    for (song = 0; song < songCount-1; song++) {
+        songEnds[song] = songStarts[song+1];
+    }
+    songEnds[songCount-1] = api.getDuration();
+    return songEnds;
+}
+
+function getCurrentSongIndex() {
+    var currTime = api.getCurrentTime();
+    for (song = 0; song < songStarts.length; song++) {
+        if (currTime >= songStarts[song] && currTime <= songEnds[song]) {
+            return song;
+        }
+    }
+}
 
 bind();
 onNavigate();

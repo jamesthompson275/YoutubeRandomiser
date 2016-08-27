@@ -65,5 +65,22 @@ function bind() {
         true);
 }
 
+
 bind();
 onNavigate();
+
+    
+    //window.setTimeout(checkNavigation, 5000);
+    checkNavigation();
+
+var songCount = $('#eow-description a[href="#"]').length;
+var songStarts = [];
+for (song = 0; song < songCount; song++) {
+    var timeSplit = $('#eow-description a[href="#"]')[song].text.split(":");
+    var timeSplitLen = timeSplit.length;
+    var startTime = 0
+    for (i = 0; i < timeSplitLen; i++) {
+        startTime += parseInt(timeSplit[i])*Math.pow(60,timeSplitLen-1-i);
+    }
+    songStarts[song] = startTime;
+}

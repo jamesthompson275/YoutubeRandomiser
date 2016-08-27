@@ -12,8 +12,13 @@
    "content_scripts": [
 		{
 			"matches": ["http://*.youtube.com/*", "https://*.youtube.com/*"],
-			"js": ["scripts/jquery-3.1.0.js", "scripts/extension.js"]
+			"js": ["scripts/inject.js"]
 		}
+	],
+
+	"web_accessible_resources": [
+		"scripts/jquery-3.1.0.js",
+		"scripts/extension.js"
 	],
 
 	"background": {

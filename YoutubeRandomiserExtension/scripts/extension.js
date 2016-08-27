@@ -2,10 +2,26 @@
 
 console.info('script load');
 
+//TODO...
+//YoutubeRandomiserExtension = {};
+//YoutubeRandomiserExtension.bind();
+
 var api = null;
 var songs = [];
-var playerBar = null;
-var dom = {};
+
+var dom = {
+    title: null,
+    description: null,
+    container: null,
+    playerContainer: null,
+    name: null,
+    prevBtn: null,
+    nextBtn: null,
+    loopBtn: null,
+    shuffleBtn: null,
+    tableContainer: null,
+    table: null
+};
 
 var loaded = false;
 var watch = false;
@@ -22,14 +38,23 @@ function onNavigate() {
     destroy();
 }
 
+function ticker(){
+    if (!watch) {
+        console.warn('TICK: stop (leaving page)');
+        return;
+    }
+
+    window.setTimeout(ticker, 250);
+}
+
 function init(attempt = 0){
     if (!watch) {
-        console.warn('INIT: abort (leaving page)');
+        console.info('INIT: abort (leaving page)');
         return;
     }
 
     if (attempt > 10) {
-        console.warn('INIT: fail (too many retries)');
+        console.error('INIT: fail (too many retries)');
         return;
     }
 
@@ -42,15 +67,86 @@ function init(attempt = 0){
     }
     api = _api;
 
-    // get DOM refs
+    // get DOM elements
+    dom.title = $('h1.watch-title-container');
+    dom.description = $('p#eow-description');
+
+    if (
+        !dom.title.length || 
+        !dom.description.length
+    ) {
+        console.error('INIT: fail (DOM elements missing)');
+        return;
+    }
+
+    // create DOM elements
+    var btnStyle = 'class="yt-uix-button yt-uix-button-default yt-uix-button-size-default"';
+    dom.title.after(`
+        <div id="YoutubeRandomiserExtension">
+            <div id="YTREPlayerContainer">
+                <div style="margin: 5px;">
+                    <b>Now Playing : </b>
+                    <span id="YTRESongName" style="margin: 10px"> ... </span>
+                </div>
+                <div>
+                    <button `+btnStyle+` id="YTREPrevBtn">    prev    </button>
+                    <button `+btnStyle+` id="YTRENextBtn">    next    </button>
+                    <button `+btnStyle+` id="YTRELoopBtn">    repeat  </button>
+                    <button `+btnStyle+` id="YTREShuffleBtn"> shuffle </button>
+                </div>
+            </div>
+            <div id="YTRETableContainer">
+                <table id="YTRETable">
+                </table>
+            </div>
+        </div>
+    `);
+    dom.container = $('#YoutubeRandomiserExtension');
+    dom.tableContainer = $('#YTRETableContainer');
+    dom.playerContainer = $('#YTREPlayerContainer');
+    dom.table = $('#YTRETable');
+    dom.name = $('#YTRESongName');
+    dom.prevBtn= $('#YTREPrevBtn');
+    dom.nextBtn= $('#YTRENextBtn');
+    dom.loopBtn= $('#YTRELoopBtn');
+    dom.shuffleBtn= $('#YTREShuffleBtn');
+
+    if (
+        !dom.container.length || 
+        !dom.tableContainer.length || 
+        !dom.playerContainer.length || 
+        !dom.table.length ||
+        !dom.name.length ||
+        !dom.prevBtn.length ||
+        !dom.nextBtn.length ||
+        !dom.loopBtn.length ||
+        !dom.shuffleBtn.length
+    ) {
+        console.error('INIT: fail (DOM create failed)');
+        return;
+    }
 
     // get songs
-    
-    // create player bar
+    songs = getSongs();
+
+    // populate songs table
+    //TODO...
+
+    // bind songs table events
+    //TODO...
+
+    // bind normal button events
+    //TODO...
+
+    //$(div).html(s)
+    //$(div).append(s)
+    //$(div).before(s)
+    //$(div).after(s)
 
     loaded = true;
     console.log('INIT: done!');
     testEvents();
+    ticker();
 }
 
 function destroy() {}
@@ -64,16 +160,38 @@ function bind() {
             }
         }, 
         true);
+
+    onNavigate();
 }
 
+function getSongs() {
+
+    // populate song array
+    //TODO...
+}
+
+function unsort(array) {
+    var idx = array.length;
+    var randomIdx;
+    var temp;
+
+    while (0 !== idx) {
+        randomIdx = Math.floor(Math.random() * idx);
+        idx -= 1;
+        temp = array[idx];
+        array[idx] = array[randomIdx];
+        array[randomIdx] = temp;
+    }
+
+    return array;
+}
 
 function testEvents() {
-    //run test code here
+    // run test code here
     songStarts = getStartTimes();
     songEnds = getEndTimes(songStarts);
     console.log(songStarts);
     console.log(songEnds);
-    
 }
 
 function getStartTimes() {
@@ -111,6 +229,3 @@ function getCurrentSongIndex() {
 }
 
 bind();
-onNavigate();
-
-

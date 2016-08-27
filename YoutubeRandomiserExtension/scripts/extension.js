@@ -66,23 +66,34 @@ function bind() {
         true);
 }
 
-function testEvents() {
 
+function testEvents() {
     //run test code here
+    var songCount = $('#eow-description a[href="#"]').length;
+    var videoLength = api.getDuration();
+
+    var songStarts = getStartTimes(songCount);
+
+    console.log(songStarts); 
+    console.log(videoLength);
 }
 
-var songCount = $('#eow-description a[href="#"]').length;
-var songStarts = [];
-for (song = 0; song < songCount; song++) {
-    var timeSplit = $('#eow-description a[href="#"]')[song].text.split(":");
-    var timeSplitLen = timeSplit.length;
-    var startTime = 0
-    for (i = 0; i < timeSplitLen; i++) {
-        startTime += parseInt(timeSplit[i])*Math.pow(60,timeSplitLen-1-i);
+function getStartTimes(songCount) {
+    var songStarts = [];
+    for (song = 0; song < songCount; song++) {
+        var timeSplit = $('#eow-description a[href="#"]')[song].text.split(":");
+        var timeSplitLen = timeSplit.length;
+        var startTime = 0
+        for (i = 0; i < timeSplitLen; i++) {
+            startTime += parseInt(timeSplit[i])*Math.pow(60,timeSplitLen-1-i);
+        }
+        songStarts[song] = startTime;
     }
-    songStarts[song] = startTime;
+    return songStarts;
 }
 
 
 bind();
 onNavigate();
+
+

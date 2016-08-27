@@ -43,7 +43,7 @@ function ticker(){
         console.warn('TICK: stop (leaving page)');
         return;
     }
-
+    setNowPlaying();
     window.setTimeout(ticker, 250);
 }
 
@@ -149,7 +149,7 @@ function init(attempt = 0){
 
     loaded = true;
     console.log('INIT: done!');
-    testEvents();
+    //testEvents();
     ticker();
 }
 
@@ -230,6 +230,26 @@ function unsort(array) {
     return array;
 }
 
+function getCurrentSongIndex() {
+	var currTime = api.getCurrentTime();
+	//Prevents Crash
+	if (currTime >= songs[songs.length-1].endTime) {
+		return songs.length-1;
+	}
+	for (i = 0; i < songs.length; i++) {
+		if (currTime >= songs[i].startTime &&
+			currTime < songs[i].endTime) {
+			//Not <= to prevent a perceivable lag in song name change.
+			return i;
+		}
+	}
+}
+
+function setNowPlaying() {
+	var currSongIndex = getCurrentSongIndex();
+	dom.name.text(songs[currSongIndex].name);
+}
+/*
 function testEvents() {
     // run test code here
     songStarts = getStartTimes();
@@ -271,5 +291,7 @@ function getCurrentSongIndex() {
         }
     }
 }
+*/
+
 
 bind();

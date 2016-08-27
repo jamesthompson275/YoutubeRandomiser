@@ -3,9 +3,9 @@
 console.info('script load');
 
 var api = null;
-var description = null;
 var songs = [];
 var playerBar = null;
+var dom = {};
 
 var loaded = false;
 var watch = false;
@@ -29,7 +29,7 @@ function init(attempt = 0){
     }
 
     if (attempt > 10) {
-        console.warn('INIT: abort (too many retries)');
+        console.warn('INIT: fail (too many retries)');
         return;
     }
 
@@ -42,7 +42,7 @@ function init(attempt = 0){
     }
     api = _api;
 
-    // get description
+    // get DOM refs
 
     // get songs
     
@@ -50,6 +50,7 @@ function init(attempt = 0){
 
     loaded = true;
     console.log('INIT: done!');
+    testEvents();
 }
 
 function destroy() {}
@@ -65,13 +66,10 @@ function bind() {
         true);
 }
 
+function testEvents() {
 
-bind();
-onNavigate();
-
-    
-    //window.setTimeout(checkNavigation, 5000);
-    checkNavigation();
+    //run test code here
+}
 
 var songCount = $('#eow-description a[href="#"]').length;
 var songStarts = [];
@@ -84,3 +82,7 @@ for (song = 0; song < songCount; song++) {
     }
     songStarts[song] = startTime;
 }
+
+
+bind();
+onNavigate();

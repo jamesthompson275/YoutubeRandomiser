@@ -280,7 +280,8 @@ function tableBind(){
     			var tmp = songs[i-1];
     			songs[i-1] = songs[i];
     			songs[i] = tmp;
-                if (wasPlaying == idx) { wasPlaying = wasPlaying - 1; }
+                if (wasPlaying == i) { wasPlaying = i-1; }
+                else if (wasPlaying == i-1) { wasPlaying = i; }
     			purgeBuildTable();
                 showPlayingSong(wasPlaying);
                 return;
@@ -296,7 +297,8 @@ function tableBind(){
     			var tmp = songs[i+1];
     			songs[i+1] = songs[i];
     			songs[i] = tmp;
-                if (wasPlaying == idx) { wasPlaying = wasPlaying + 1; }
+                if (wasPlaying == i) { wasPlaying = i+1; }
+                else if (wasPlaying == i+1) { wasPlaying = i; }
     			purgeBuildTable();
                 showPlayingSong(wasPlaying);
                 return;

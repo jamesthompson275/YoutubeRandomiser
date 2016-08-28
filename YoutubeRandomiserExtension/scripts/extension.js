@@ -8,6 +8,8 @@ console.info('script load');
 
 var api = null;
 var songs = [];
+var wasPlaying = -1;
+var wasTime = -1;
 
 var dom = {
     title: null,
@@ -19,6 +21,7 @@ var dom = {
     nextBtn: null,
     loopBtn: null,
     shuffleBtn: null,
+    disableBtn: null,
     tableContainer: null,
     table: null
 };
@@ -30,17 +33,17 @@ function onNavigate() {
     watch = ('/watch' === location.pathname);
 
     if (watch) {
-        console.log('NAV: watch page!');
+        console.log('YTRE NAV: watch page!');
         init();
         return;
     }
-    console.log('NAV: non-watch page')
+    console.log('YTRE NAV: non-watch page')
     destroy();
 }
 
 function ticker(){
     if (!watch) {
-        console.warn('TICK: stop (leaving page)');
+        console.warn('YTRE TICK: stop (leaving page)');
         return;
     }
     setNowPlaying();
@@ -49,12 +52,12 @@ function ticker(){
 
 function init(attempt = 0){
     if (!watch) {
-        console.info('INIT: abort (leaving page)');
+        console.info('YTRE INIT: abort (leaving page)');
         return;
     }
 
     if (attempt > 10) {
-        console.error('INIT: fail (too many retries)');
+        console.error('YTRE INIT: fail (too many retries)');
         return;
     }
 
@@ -62,7 +65,7 @@ function init(attempt = 0){
     var _api = document.getElementById('movie_player');
     if (_api.getCurrentTime === undefined) {
         window.setTimeout(init, 1000, attempt++);
-        console.warn('INIT: retry (player not found)');
+        console.warn('YTRE INIT: retry (player not found)');
         return;
     }
     api = _api;
@@ -75,19 +78,19 @@ function init(attempt = 0){
         !dom.title.length || 
         !dom.description.length
     ) {
-        console.error('INIT: fail (DOM elements missing)');
+        console.error('YTRE INIT: fail (DOM elements missing)');
         return;
     }
 
     // get songs
     songs = getSongs();
     if (!songs.length) {
-        console.warn('INIT: abort (no songs in description)');
+        console.warn('YTRE INIT: abort (no songs in description)');
         return;
     }
 
     // create DOM elements
-    var btnStyle = 'class="yt-uix-button yt-uix-button-default yt-uix-button-size-default"';
+    var btnClasses = 'class="yt-uix-button yt-uix-button-default yt-uix-button-size-default"';
     dom.title.after(`
         <div id="YoutubeRandomiserExtension">
             <div id="YTREPlayerContainer">
@@ -96,10 +99,11 @@ function init(attempt = 0){
                     <span id="YTRESongName" style="margin: 10px"> ... </span>
                 </div>
                 <div>
-                    <button `+btnStyle+` id="YTREPrevBtn">    prev    </button>
-                    <button `+btnStyle+` id="YTRENextBtn">    next    </button>
-                    <button `+btnStyle+` id="YTRELoopBtn">    repeat  </button>
-                    <button `+btnStyle+` id="YTREShuffleBtn"> shuffle </button>
+                    <button `+btnClasses+` id="YTREPrevBtn">    prev    </button>
+                    <button `+btnClasses+` id="YTRENextBtn">    next    </button>
+                    <button `+btnClasses+` id="YTREShuffleBtn"> shuffle </button>
+                    <button `+btnClasses+` id="YTRELoopBtn">    repeat  </button>
+                    <button `+btnClasses+` id="YTREDisableBtn"> disable </button>
                 </div>
             </div>
             <div id="YTRETableContainer">
@@ -112,24 +116,25 @@ function init(attempt = 0){
     dom.tableContainer = $('#YTRETableContainer');
     dom.playerContainer = $('#YTREPlayerContainer');
     dom.table = $('#YTRETable');
-    dom.name = $('#YTRESongName');
-    dom.prevBtn= $('#YTREPrevBtn');
-    dom.nextBtn= $('#YTRENextBtn');
-    dom.loopBtn= $('#YTRELoopBtn');
-    dom.shuffleBtn= $('#YTREShuffleBtn');
+    dom.songName = $('#YTRESongName');
+    dom.prevBtn = $('#YTREPrevBtn');
+    dom.nextBtn = $('#YTRENextBtn');
+    dom.loopBtn = $('#YTRELoopBtn');
+    dom.shuffleBtn = $('#YTREShuffleBtn');
+    dom.disableBtn = $('#YTREDisableBtn');
 
     if (
         !dom.container.length || 
         !dom.tableContainer.length || 
         !dom.playerContainer.length || 
         !dom.table.length ||
-        !dom.name.length ||
+        !dom.songName.length ||
         !dom.prevBtn.length ||
         !dom.nextBtn.length ||
         !dom.loopBtn.length ||
         !dom.shuffleBtn.length
     ) {
-        console.error('INIT: fail (DOM create failed)');
+        console.error('YTRE INIT: fail (DOM create failed)');
         return;
     }
 
@@ -148,8 +153,8 @@ function init(attempt = 0){
     //$(div).after(s)
 
     loaded = true;
-    console.log('INIT: done!');
-    //testEvents();
+    console.info('YTRE INIT: done!');
+    testEvents();
     ticker();
 }
 
@@ -169,14 +174,14 @@ function bind() {
 }
 
 function getSongs() {
-    //
+
     // get description parts
     var s = '<p>' + dom.description[0].outerHTML.split('<br>').join('</p><p>') + '</p>';
     var d = $.parseHTML(s);
     var duration = api.getDuration();
 
     if (!duration) {
-        console.error('INIT: failed to retrieve non-zero video duration');
+        console.error('YTRE INIT: failed to retrieve non-zero video duration');
         return [];
     }
 
@@ -184,7 +189,7 @@ function getSongs() {
     d.forEach(function(p, i){
         var a = $(p).find('a[href="#"]');
         if (!a.length) return;
-        //
+
         // get start time
         var timeSplit = a[0].text.split(":");
         var timeSplitLen = timeSplit.length;
@@ -192,12 +197,12 @@ function getSongs() {
         for (i = 0; i < timeSplitLen; i++) {
             startTime += parseInt(timeSplit[i])*Math.pow(60,timeSplitLen-1-i);
         }
-        //
+
         // get song name
         var name = $(p).contents().filter(function() {
             return this.nodeType == 3;
         }).text() || 'Unknown Song';
-        //
+
         var song = {
             idx: songList.length,
             name: name,
@@ -230,68 +235,68 @@ function unsort(array) {
     return array;
 }
 
-function getCurrentSongIndex() {
-	var currTime = api.getCurrentTime();
-	//Prevents Crash
-	if (currTime >= songs[songs.length-1].endTime) {
-		return songs.length-1;
-	}
+function getCurrentSongIndex(time) {
 	for (i = 0; i < songs.length; i++) {
-		if (currTime >= songs[i].startTime &&
-			currTime < songs[i].endTime) {
-			//Not <= to prevent a perceivable lag in song name change.
+		if (time >= songs[i].startTime &&
+			time < songs[i].endTime) {
 			return i;
 		}
 	}
 }
 
 function setNowPlaying() {
-	var currSongIndex = getCurrentSongIndex();
-	dom.name.text(songs[currSongIndex].name);
+	var time = api.getCurrentTime();
+	var playing = getCurrentSongIndex(time);
+
+    // small time jump; different but defined song
+    if (
+        (Math.abs(time - wasTime) < 1) &&
+        (playing !== wasPlaying)
+    )
+    {
+        //set playing to the 'next' song; move the player
+
+        if (wasPlaying < songs.length - 1) {
+            playing = wasPlaying + 1;
+        }
+        else {
+            //TODO implement loop on/off check
+            if (true) {
+                playing = 0;
+            }
+        }
+        var seekTime = songs[playing].startTime;
+
+        //move the player
+        api.seekTo(seekTime, true);
+    }
+
+    // different but defined song
+    if (
+        (playing !== undefined) &&
+        (playing !== wasPlaying)
+    )
+    {
+        //update songName
+        dom.songName.text(songs[playing].name);
+        dom.songName.animate( 
+            {opacity:0}, 
+            200, 
+            "linear", 
+            function(){
+                $(this).animate({opacity:1},200);
+            })
+
+        //update table
+        //TODO...
+    }
+
+    wasPlaying = playing  
+    wasTime = time;
 }
-/*
+
 function testEvents() {
     // run test code here
-    songStarts = getStartTimes();
-    songEnds = getEndTimes(songStarts);
-    console.log(songStarts);
-    console.log(songEnds);
 }
-
-function getStartTimes() {
-    var songCount = $('#eow-description a[href="#"]').length;
-    var songStarts = [];
-    for (song = 0; song < songCount; song++) {
-        var timeSplit = $('#eow-description a[href="#"]')[song].text.split(":");
-        var timeSplitLen = timeSplit.length;
-        var startTime = 0
-        for (i = 0; i < timeSplitLen; i++) {
-            startTime += parseInt(timeSplit[i])*Math.pow(60,timeSplitLen-1-i);
-        }
-        songStarts[song] = startTime;
-    }
-    return songStarts;
-}
-
-function getEndTimes(songStarts) {
-    var songEnds = [];
-    var songCount = songStarts.length;
-    for (song = 0; song < songCount-1; song++) {
-        songEnds[song] = songStarts[song+1];
-    }
-    songEnds[songCount-1] = api.getDuration();
-    return songEnds;
-}
-
-function getCurrentSongIndex() {
-    var currTime = api.getCurrentTime();
-    for (song = 0; song < songStarts.length; song++) {
-        if (currTime >= songStarts[song] && currTime <= songEnds[song]) {
-            return song;
-        }
-    }
-}
-*/
-
 
 bind();

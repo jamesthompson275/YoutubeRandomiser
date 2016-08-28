@@ -482,7 +482,8 @@ function setNowPlaying() {
                 if (Math.abs(time - endTime) < 0.5) {
                     api.seekTo(endTime - 1, true);
                 }
-                api.pauseVideo();
+                //TODO figure out why this triggers on shuffle
+                //api.pauseVideo();
                 return;
             }
         }

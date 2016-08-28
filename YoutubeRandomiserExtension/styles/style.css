@@ -1,3 +1,16 @@
 .currentSong{
 	font-weight:bold;
 }
+
+#YoutubeRandomiserExtension {
+	border-top: 1px solid lightgray;
+	border-bottom: 1px solid lightgray;
+	padding-top: 5px;
+	padding-bottom: 10px;
+	margin-top: 10px;
+	margin-bottom: 5px;
+}
+
+.watch-title-container {
+	color: lightgray;
+}

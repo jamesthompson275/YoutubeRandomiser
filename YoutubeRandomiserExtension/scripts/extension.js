@@ -4,12 +4,15 @@ console.info('script load');
 
 //TODO...
 //YoutubeRandomiserExtension = {};
-//YoutubeRandomiserExtension.bind();
+//YoutubeRandomiserExtension.init();
 
 var api = null;
 var songs = [];
+
 var wasPlaying = -1;
 var wasTime = -1;
+var loop = false;
+var shuffle = false;
 
 var dom = {
     title: null,
@@ -34,7 +37,7 @@ function onNavigate() {
 
     if (watch) {
         console.log('YTRE NAV: watch page!');
-        init();
+        setup();
         return;
     }
     console.log('YTRE NAV: non-watch page')
@@ -50,7 +53,7 @@ function ticker(){
     window.setTimeout(ticker, 250);
 }
 
-function init(attempt = 0){
+function setup(attempt = 0){
     if (!watch) {
         console.info('YTRE INIT: abort (leaving page)');
         return;
@@ -64,7 +67,7 @@ function init(attempt = 0){
     // get player
     var _api = document.getElementById('movie_player');
     if (_api.getCurrentTime === undefined) {
-        window.setTimeout(init, 1000, attempt++);
+        window.setTimeout(setup, 1000, attempt++);
         console.warn('YTRE INIT: retry (player not found)');
         return;
     }
@@ -102,7 +105,7 @@ function init(attempt = 0){
                     <button `+btnClasses+` id="YTREPrevBtn">    prev    </button>
                     <button `+btnClasses+` id="YTRENextBtn">    next    </button>
                     <button `+btnClasses+` id="YTREShuffleBtn"> shuffle </button>
-                    <button `+btnClasses+` id="YTRELoopBtn">    repeat  </button>
+                    <button `+btnClasses+` id="YTRELoopBtn">    loop    </button>
                     <button `+btnClasses+` id="YTREDisableBtn"> disable </button>
                 </div>
             </div>
@@ -154,13 +157,29 @@ function init(attempt = 0){
 
     loaded = true;
     console.info('YTRE INIT: done!');
+    bind();
     testEvents();
     ticker();
 }
 
+function bind() {
+    // click events
+
+    dom.loopBtn.on('click', function(e){
+        loop = !loop;
+        dom.loopBtn.css('background-color', loop ? 'lightgray' : '');
+    });
+
+    dom.shuffleBtn.on('click', function(e){
+        shuffle = !shuffle;
+        setOrder(shuffle);
+        dom.shuffleBtn.css('background-color', loop ? 'lightgray' : '');
+    });
+}
+
 function destroy() {}
 
-function bind() {
+function init() {
     (document.body || document.documentElement).addEventListener(
         'transitionend',
         function(event) {
@@ -235,6 +254,12 @@ function unsort(array) {
     return array;
 }
 
+function sort(songList) {
+    songList.sort(function(s1, s2) {
+        return s1.idx - s2.idx;
+    });
+    return songList;
+}
 
 function getCurrentSongIndex(time) {
 	for (i = 0; i < songs.length; i++) {
@@ -245,8 +270,8 @@ function getCurrentSongIndex(time) {
 	}
 }
 
-function shuffle() {
-	songs = unsort(songs);
+function setOrder(shuffle) {
+	songs = shuffle ? unsort(songs) : sort(songs);
 	api.seekTo(songs[0].startTime,true);
 	wasPlaying = songs[0];
 	wasTime = songs[0].startTime
@@ -290,20 +315,28 @@ function setNowPlaying() {
             playing = wasPlaying + 1;
         }
         else {
-            //TODO implement loop on/off check
-            if (true) {
+            if (loop) {
                 playing = 0;
             }
+            else {
+                wasPlaying = -1;
+                wasTime = -1;
+                if (Math.abs(time - endTime) < 0.5) {
+                    api.seekTo(endTime - 1, true);
+                }
+                api.pauseVideo();
+                return;
+            }
         }
-        var seekTime = songs[playing].startTime;
-
         //move the player
+        var seekTime = songs[playing].startTime;
         api.seekTo(seekTime, true);
     }
 
     // different but defined song
     if (
         (playing !== undefined) &&
+        (playing !== -1) &&
         (playing !== wasPlaying)
     )
     {
@@ -325,7 +358,6 @@ function setNowPlaying() {
 				$('#song'+idx).addClass("currentSong");
 			}
 		}
-
     }
 
     wasPlaying = playing  
@@ -336,4 +368,15 @@ function testEvents() {
     // run test code here
 }
 
-bind();
+init();
+
+/*
+    Major features todo:
+        - implement on/off checkbox for the extension menu
+        - implement on/off loop 'checkbox' button. set flag on check. Allow video repeat.
+        - implement disable checkbox. set flag on check. Skip events.
+        - add up/dn buttons on table, with hide/show on hover
+        - glyphicons for everything
+        - bind & implement all button events
+        - drag n drop
+*/

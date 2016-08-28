@@ -13,6 +13,7 @@ var wasPlaying = -1;
 var wasTime = -1;
 var loop = false;
 var shuffle = false;
+var disable = false;
 
 var dom = {
     title: null,
@@ -173,7 +174,13 @@ function bind() {
     dom.shuffleBtn.on('click', function(e){
         shuffle = !shuffle;
         setOrder(shuffle);
-        dom.shuffleBtn.css('background-color', loop ? 'lightgray' : '');
+        dom.shuffleBtn.css('background-color', shuffle ? 'lightgray' : '');
+    });
+
+    dom.disableBtn.on('click', function(e){
+        disable = !disable;
+        dom.disableBtn.css('background-color', disable ? 'lightgray' : '');
+        dom.table.css('color', disable ? 'lightgray' : 'black');
     });
 }
 
@@ -305,8 +312,9 @@ function setNowPlaying() {
 
     // small time jump; different but defined song
     if (
-        ((Math.abs(time - wasTime) < 0.5) && (playing !== wasPlaying)) ||
-         (Math.abs(time - endTime) < 0.5)
+        (((Math.abs(time - wasTime) < 0.5) && (playing !== wasPlaying)) ||
+          (Math.abs(time - endTime) < 0.5)) &&
+          !disable
     )
     {
         //set playing to the 'next' song; move the player
@@ -361,7 +369,7 @@ function setNowPlaying() {
     }
 
     wasPlaying = playing  
-    wasTime = time;
+    if (!disable) wasTime = time;
 }
 
 function testEvents() {

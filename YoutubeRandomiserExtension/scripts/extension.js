@@ -159,6 +159,7 @@ function setup(attempt = 0){
     loaded = true;
     console.info('YTRE INIT: done!');
     bind();
+    tableBind();
     testEvents();
     ticker();
 }
@@ -189,6 +190,44 @@ function bind() {
     });
 
     dom.prevBtn.on('click', function(e){
+    });
+
+    
+}
+
+function tableBind(){
+	$('.playNow').on('click', function(e) {
+    	var idx = e.target.parentElement.parentElement.getAttribute('id').substring(4);
+    	for (i = 0; i < songs.length; i++) {
+    		if (idx == songs[i].idx) {
+    			api.seekTo(songs[i].startTime, true);
+    		}
+    	}
+    });
+
+    $('.moveUp').on('click', function(e) {   	
+    	var idx = e.target.parentElement.parentElement.getAttribute('id').substring(4);
+    	for (i = 1; i < songs.length; i++) {
+    		if (idx == songs[i].idx) {
+    			var tmp = songs[i-1];
+    			songs[i-1] = songs[i];
+    			songs[i] = tmp;
+    			purgeBuildTable();
+    		}
+    	}
+    });
+
+    $('.moveDown').on('click', function(e) {
+    	var idx = e.target.parentElement.parentElement.getAttribute('id').substring(4);
+
+    	for (i = 0; i < songs.length - 1; i++) {
+    		if (idx == songs[i].idx) {
+    			var tmp = songs[i+1];
+    			songs[i+1] = songs[i];
+    			songs[i] = tmp;
+    			purgeBuildTable();
+    		}
+    	}
     });
 }
 
@@ -290,9 +329,12 @@ function setOrder(shuffle) {
 	api.seekTo(songs[0].startTime,true);
 	wasPlaying = songs[0];
 	wasTime = songs[0].startTime
+}
+
+function purgeBuildTable() {
 	dom.table[0].innerHTML="";
 	createSongTable();
-	
+	tableBind();
 }
 
 function createSongTable() {

@@ -26,3 +26,17 @@ h1.watch-title-container {
 	
 	border-bottom: 1px solid lightgray;
 }
+
+.playNow, .moveUp, .moveDown {
+	padding:3px 15px;
+	color:lightgray;
+	display:inline-block;
+	
+
+}
+
+.playNow:hover, .moveUp:hover, .moveDown:hover {
+	color:black;
+	background-color:lightgray;
+
+}

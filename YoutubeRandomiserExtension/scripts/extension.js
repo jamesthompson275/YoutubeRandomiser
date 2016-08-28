@@ -300,6 +300,7 @@ function createSongTable() {
 		var row = dom.table[0].insertRow(-1);
 		var cell0 = row.insertCell(0);
 		var cell1 = row.insertCell(1);
+		var cell2 = row.insertCell(2);
 		row.setAttribute("id", "song"+songs[i].idx);
 		var lenSec = songs[i].endTime - songs[i].startTime;
 		var lenMin = Math.floor(lenSec / 60);
@@ -309,6 +310,9 @@ function createSongTable() {
 		}
 		cell0.innerHTML = songs[i].name;
 		cell1.innerHTML = lenMin+":"+lenSec;
+		cell2.innerHTML = "<span class='playNow'>\u25B6</span>"+
+							"<span class='moveUp'>\u2227</span>"+
+							"<span class='moveDown'>\u2228</span>";
 	}
 }
 

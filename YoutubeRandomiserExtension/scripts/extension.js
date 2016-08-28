@@ -176,6 +176,9 @@ function bind() {
         shuffle = !shuffle;
         setOrder(shuffle);
         purgeBuildTable();
+        wasPlaying = -1;
+        wasTime = -1;
+        api.seekTo(0, true);
         dom.shuffleBtn.css('background-color', shuffle ? 'lightgray' : '');
     });
 
@@ -484,8 +487,7 @@ function setNowPlaying() {
                 if (Math.abs(time - endTime) < 0.5) {
                     api.seekTo(endTime - 1, true);
                 }
-                //TODO figure out why this triggers on shuffle
-                //api.pauseVideo();
+                api.pauseVideo();
                 return;
             }
         }

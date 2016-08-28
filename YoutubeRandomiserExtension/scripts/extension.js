@@ -233,7 +233,7 @@ function getSongs() {
             idx: songList.length,
             name: name,
             startTime: startTime,
-            endTime: duration
+            endTime: Math.floor(duration)
         };
         songList.push(song);
     });
@@ -375,6 +375,7 @@ function setNowPlaying() {
 function testEvents() {
     // run test code here
 }
+
 
 init();
 

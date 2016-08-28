@@ -139,7 +139,7 @@ function init(attempt = 0){
     }
 
     // populate songs table
-    //TODO...
+    createSongTable();
 
     // bind songs table events
     //TODO...
@@ -235,6 +235,7 @@ function unsort(array) {
     return array;
 }
 
+
 function getCurrentSongIndex(time) {
 	for (i = 0; i < songs.length; i++) {
 		if (time >= songs[i].startTime &&
@@ -244,9 +245,33 @@ function getCurrentSongIndex(time) {
 	}
 }
 
+
+
+function createSongTable() {
+	for (i = 0; i < songs.length; i++) {
+		var row = dom.table[0].insertRow(-1);
+		var cell0 = row.insertCell(0);
+		var cell1 = row.insertCell(1);
+		row.setAttribute("id", "song"+i);
+		var lenSec = songs[i].endTime - songs[i].startTime;
+		var lenMin = Math.floor(lenSec / 60);
+		lenSec -= lenMin*60;
+		if (lenSec < 10) {
+			lenSec= "0"+lenSec;
+		}
+		cell0.innerHTML = songs[i].name;
+		cell1.innerHTML = lenMin+":"+lenSec;
+	}
+}
+
 function setNowPlaying() {
+
 	var time = api.getCurrentTime();
 	var playing = getCurrentSongIndex(time);
+
+	
+
+
 
     // small time jump; different but defined song
     if (
@@ -288,7 +313,14 @@ function setNowPlaying() {
             })
 
         //update table
-        //TODO...
+        for (i = 0; i < songs.length; i++) {
+			var idx = songs[i].idx;
+			$('#song'+idx).removeClass("currentSong");
+			if (playing == i) {
+				$('#song'+idx).addClass("currentSong");
+			}
+		}
+
     }
 
     wasPlaying = playing  

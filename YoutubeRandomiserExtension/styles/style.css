@@ -14,3 +14,15 @@
 .watch-title-container {
 	color: lightgray;
 }
+
+#YTRETable{
+	margin-top: 5px;
+	border-collapse: collapse;
+	/*border: 1px solid lightgray;*/
+}
+
+#YTRETable td{
+	padding: 2px 5px;
+	
+	border-bottom: 1px solid lightgray;
+}

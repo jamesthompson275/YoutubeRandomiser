@@ -103,8 +103,8 @@ function setup(attempt = 0){
                     <span id="YTRESongName" style="margin: 10px"> ... </span>
                 </div>
                 <div>
-                    <button `+btnClasses+` id="YTREPrevBtn">    prev    </button>
-                    <button `+btnClasses+` id="YTRENextBtn">    next    </button>
+                    <button `+btnClasses+` id="YTREPrevBtn">    |<<    </button>
+                    <button `+btnClasses+` id="YTRENextBtn">    >>|    </button>
                     <button `+btnClasses+` id="YTREShuffleBtn"> shuffle </button>
                     <button `+btnClasses+` id="YTRELoopBtn">    loop    </button>
                     <button `+btnClasses+` id="YTREDisableBtn"> disable </button>
@@ -175,6 +175,7 @@ function bind() {
     dom.shuffleBtn.on('click', function(e){
         shuffle = !shuffle;
         setOrder(shuffle);
+        purgeBuildTable();
         dom.shuffleBtn.css('background-color', shuffle ? 'lightgray' : '');
     });
 
@@ -190,6 +191,73 @@ function bind() {
     });
 
     dom.prevBtn.on('click', function(e){
+
+        var time = api.getCurrentTime();
+        var endTime = api.getDuration();
+        var playing = getCurrentSongIndex(time);
+
+        //prev: if song is defined, goto start of previous (wrap)
+        if (playing !== undefined) {
+            playing = playing - 1;
+            if (playing < 0) {
+                playing = songs.length - 1;
+            }
+        }
+
+        //prev: if song is undefined, go to next-lower 'start' time
+        if (playing == undefined) {
+            playing = getSongBefore(time);
+        }
+
+        //prev: else start of video
+        if (playing == undefined) {
+            api.seekTo(0, true);
+        }
+
+        //'go' actions: set time, songID, player play, player seek, update DOM
+        if (playing !== undefined) {
+            var song = songs[playing];
+            api.seekTo(song.startTime, true);
+            api.playVideo();
+            wasPlaying = playing;
+            wasTime = time;
+            showPlayingSong(playing);
+        }
+    });
+
+    dom.nextBtn.on('click', function(e){
+
+        var time = api.getCurrentTime();
+        var endTime = api.getDuration();
+        var playing = getCurrentSongIndex(time);
+
+        //next: if song is defined, goto start of next (wrap)
+        if (playing !== undefined) {
+            playing = playing + 1;
+            if (playing > songs.length-1) {
+                playing = 0;
+            }
+        }
+
+        //next: if song is undefined, goto next-upper 'start' time
+        if (playing == undefined) {
+            playing = getSongAfter(time);
+        }
+
+        //next: else end of video
+        if (playing == undefined) {
+            api.seekTo(endTime - 1, true);
+        }
+
+        //'go' actions: set time, songID, player play, player seek, update DOM
+        if (playing !== undefined) {
+            var song = songs[playing];
+            api.seekTo(song.startTime, true);
+            api.playVideo();
+            wasPlaying = playing;
+            wasTime = time;
+            showPlayingSong(playing);
+        }
     });
 
     
@@ -212,7 +280,10 @@ function tableBind(){
     			var tmp = songs[i-1];
     			songs[i-1] = songs[i];
     			songs[i] = tmp;
+                if (wasPlaying == idx) { wasPlaying = wasPlaying - 1; }
     			purgeBuildTable();
+                showPlayingSong(wasPlaying);
+                return;
     		}
     	}
     });
@@ -225,11 +296,36 @@ function tableBind(){
     			var tmp = songs[i+1];
     			songs[i+1] = songs[i];
     			songs[i] = tmp;
+                if (wasPlaying == idx) { wasPlaying = wasPlaying + 1; }
     			purgeBuildTable();
+                showPlayingSong(wasPlaying);
+                return;
     		}
     	}
     });
 }
+
+function getSongBefore(time) { 
+    var song = undefined;
+    songs.filter(function(x){ return x.startTime <= time; }).forEach(function(x){
+        if (song == undefined) song = x;
+        if (song.startTime < x.startTime) song = x;
+    });
+    return song;
+ }
+
+function getSongAfter(time) { 
+    var song = undefined;
+    songs.filter(function(x){ return x.startTime >= time; }).forEach(function(x){
+        if (song == undefined) song = x;
+        if (song.startTime > x.startTime) song = x;
+    });
+    return song;
+ }
+
+function getStartTimes() { 
+    return songs.map(function(x){ return x.startTime; })
+ }
 
 function destroy() {}
 
@@ -402,44 +498,44 @@ function setNowPlaying() {
         (playing !== wasPlaying)
     )
     {
-        //update songName
-        dom.songName.text(songs[playing].name);
-        dom.songName.animate( 
-            {opacity:0}, 
-            200, 
-            "linear", 
-            function(){
-                $(this).animate({opacity:1},200);
-            })
-
-        //update table
-        for (i = 0; i < songs.length; i++) {
-			var idx = songs[i].idx;
-			$('#song'+idx).removeClass("currentSong");
-			if (playing == i) {
-				$('#song'+idx).addClass("currentSong");
-			}
-		}
+        showPlayingSong(playing);
     }
 
     wasPlaying = playing  
     if (!disable) wasTime = time;
 }
 
+function showPlayingSong(playing) {
+    //update songName
+    dom.songName.text(songs[playing].name);
+    dom.songName.animate( 
+        {opacity:0}, 
+        200, 
+        "linear", 
+        function(){
+            $(this).animate({opacity:1},200);
+        })
+
+    //update table
+    for (i = 0; i < songs.length; i++) {
+        var idx = songs[i].idx;
+        $('#song'+idx).removeClass("currentSong");
+        if (playing == i) {
+            $('#song'+idx).addClass("currentSong");
+        }
+    }
+}
+
 function testEvents() {
     // run test code here
 }
-
 
 init();
 
 /*
     Major features todo:
-        - implement next/prev btns on player
-        - add up/dn buttons on table, with hide/show on hover
-        - add 'play now' buttons on table
-        - glyphicons for some buttons
         ...
+        - implement on/off button to hide the video player
         - implement on/off checkbox for the extension menu. 'refresh to see changes'
         - implement destroy() when you switch pages
         - drag n drop

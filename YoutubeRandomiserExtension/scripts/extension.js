@@ -267,16 +267,13 @@ function createSongTable() {
 function setNowPlaying() {
 
 	var time = api.getCurrentTime();
+    var endTime = api.getDuration();
 	var playing = getCurrentSongIndex(time);
-
-	
-
-
 
     // small time jump; different but defined song
     if (
-        (Math.abs(time - wasTime) < 1) &&
-        (playing !== wasPlaying)
+        ((Math.abs(time - wasTime) < 0.5) && (playing !== wasPlaying)) ||
+         (Math.abs(time - endTime) < 0.5)
     )
     {
         //set playing to the 'next' song; move the player

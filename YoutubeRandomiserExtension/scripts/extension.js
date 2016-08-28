@@ -245,14 +245,22 @@ function getCurrentSongIndex(time) {
 	}
 }
 
-
+function shuffle() {
+	songs = unsort(songs);
+	api.seekTo(songs[0].startTime,true);
+	wasPlaying = songs[0];
+	wasTime = songs[0].startTime
+	dom.table[0].innerHTML="";
+	createSongTable();
+	
+}
 
 function createSongTable() {
 	for (i = 0; i < songs.length; i++) {
 		var row = dom.table[0].insertRow(-1);
 		var cell0 = row.insertCell(0);
 		var cell1 = row.insertCell(1);
-		row.setAttribute("id", "song"+i);
+		row.setAttribute("id", "song"+songs[i].idx);
 		var lenSec = songs[i].endTime - songs[i].startTime;
 		var lenMin = Math.floor(lenSec / 60);
 		lenSec -= lenMin*60;

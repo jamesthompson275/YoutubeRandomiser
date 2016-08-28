@@ -181,6 +181,14 @@ function bind() {
         disable = !disable;
         dom.disableBtn.css('background-color', disable ? 'lightgray' : '');
         dom.table.css('color', disable ? 'lightgray' : 'black');
+        dom.title.css('color', disable ? 'black' : 'lightgray');
+        disable ? dom.prevBtn.attr('disabled', 'true') : dom.prevBtn.removeAttr('disabled');
+        disable ? dom.nextBtn.attr('disabled', 'true') : dom.nextBtn.removeAttr('disabled');
+        disable ? dom.shuffleBtn.attr('disabled', 'true') : dom.shuffleBtn.removeAttr('disabled');
+        disable ? dom.loopBtn.attr('disabled', 'true') : dom.loopBtn.removeAttr('disabled');
+    });
+
+    dom.prevBtn.on('click', function(e){
     });
 }
 
@@ -381,11 +389,12 @@ init();
 
 /*
     Major features todo:
-        - implement on/off checkbox for the extension menu
-        - implement on/off loop 'checkbox' button. set flag on check. Allow video repeat.
-        - implement disable checkbox. set flag on check. Skip events.
+        - implement next/prev btns on player
         - add up/dn buttons on table, with hide/show on hover
-        - glyphicons for everything
-        - bind & implement all button events
+        - add 'play now' buttons on table
+        - glyphicons for some buttons
+        ...
+        - implement on/off checkbox for the extension menu. 'refresh to see changes'
+        - implement destroy() when you switch pages
         - drag n drop
 */

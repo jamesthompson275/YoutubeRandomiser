@@ -28,10 +28,13 @@ function $html(s) {
     return $childElems(temp);
 }
 
-/** Bind an element, or array of elements' events to a callback. */
+/** Bind a selector, element, or array of elements' events to a callback. */
 function $bind(elems, event, callback){
     if (elems.constructor === Array) {
         elems.forEach(function(elem){ elem.addEventListener(event, callback); });
+    }
+    else if (typeof elems == 'string') {
+        $bind($elems(elems), event, callback);
     }
     else {
         elems.addEventListener(event, callback); 
@@ -289,7 +292,7 @@ function bind() {
 }
 
 function tableBind(){
-	$bind($elems('#YTRE .playNow'), 'click', function(e) {
+	$bind('#YTRE .playNow', 'click', function(e) {
     	var idx = e.target.parentElement.parentElement.getAttribute('id').substring(4);
     	for (i = 0; i < songs.length; i++) {
     		if (idx == songs[i].idx) {
@@ -298,7 +301,7 @@ function tableBind(){
     	}
     });
 
-    $bind($elems('#YTRE .moveUp'), 'click', function(e) {   	
+    $bind('#YTRE .moveUp', 'click', function(e) {   	
     	var idx = e.target.parentElement.parentElement.getAttribute('id').substring(4);
     	for (i = 1; i < songs.length; i++) {
     		if (idx == songs[i].idx) {
@@ -314,7 +317,7 @@ function tableBind(){
     	}
     });
 
-    $bind($elems('#YTRE .moveDown'), 'click', function(e) {
+    $bind('#YTRE .moveDown', 'click', function(e) {
     	var idx = e.target.parentElement.parentElement.getAttribute('id').substring(4);
 
     	for (i = 0; i < songs.length - 1; i++) {
@@ -369,7 +372,6 @@ function init() {
     onNavigate();
 }
 
-//TODO JQuery purge
 function getSongs() {
 
     // get description parts
@@ -404,7 +406,7 @@ function getSongs() {
 
         if (!name) {
             name = 'Unknown Song';
-            console.warning('YTRE INIT: empty song name for @'+timeStr);
+            console.warning('YTRE INIT: empty song name @'+timeStr);
         }
 
         var song = {

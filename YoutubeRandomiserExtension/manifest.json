@@ -17,10 +17,7 @@
 		}
 	],
 
-	"web_accessible_resources": [
-		"scripts/jquery-3.1.0.js",
-		"scripts/extension.js"
-	],
+	"web_accessible_resources": ["scripts/extension.js"],
 
 	"background": {
 		"scripts": ["scripts/bootstrap.js"],

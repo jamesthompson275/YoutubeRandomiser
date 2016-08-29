@@ -10,5 +10,5 @@ function loadScriptSync(src) {
     s.onload = function() { s.parentNode.removeChild(s); };
 }
 
-loadScriptSync('scripts/jquery-3.1.0.js');
+//loadScriptSync('scripts/jquery-3.1.0.js');
 loadScriptSync('scripts/extension.js');

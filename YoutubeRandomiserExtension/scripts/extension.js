@@ -178,7 +178,7 @@ function bind() {
         purgeBuildTable();
         wasPlaying = -1;
         wasTime = -1;
-        api.seekTo(0, true);
+        api.seekTo(songs[0].startTime, true);
         dom.shuffleBtn.css('background-color', shuffle ? 'lightgray' : '');
     });
 

@@ -40,3 +40,19 @@ h1.watch-title-container {
 	background-color:lightgray;
 
 }
+
+.animate-flash {
+  animation-name: flash;
+  animation-duration: 1s;
+  animation-fill-mode: both;
+}
+
+@keyframes flash {
+  from, 50%, to {
+    opacity: 1;
+  }
+
+  25%, 75% {
+    opacity: 0;
+  }
+}

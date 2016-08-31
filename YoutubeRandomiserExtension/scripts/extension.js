@@ -1,10 +1,45 @@
 /// <reference path="../../jquery.d.ts"/>
 
-console.info('script load');
+console.info('YTRE INIT: script load');
 
 //TODO...
 //YoutubeRandomiserExtension = {};
 //YoutubeRandomiserExtension.init();
+
+/** Get the first element matching ID "s". Null when not found. */
+function $id(s){ return document.getElementById(s); }
+
+/** Get the first element matching query string "s". Null when not found. */
+function $elem(s){ return document.querySelector(s); }
+
+/** Get array of elements matching query string "s". Empty array when not found. */
+function $elems(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); }
+
+/** Get the child elements of "elem" as an array. */
+function $childElems(elem) { return Array.prototype.slice.call(elem.children); }
+
+/** Get the child nodes of "elem" as an array. */
+function $childNodes(elem) { return Array.prototype.slice.call(elem.childNodes); }
+
+/** Parse "s" and convert to an array of HTML elements. */
+function $html(s) {
+    var temp = document.createElement('div');
+    temp.innerHTML = s;
+    return $childElems(temp);
+}
+
+/** Bind a selector, element, or array of elements' events to a callback. */
+function $bind(elems, event, callback){
+    if (elems.constructor === Array) {
+        elems.forEach(function(elem){ elem.addEventListener(event, callback); });
+    }
+    else if (typeof elems == 'string') {
+        $bind($elems(elems), event, callback);
+    }
+    else {
+        elems.addEventListener(event, callback); 
+    }
+}
 
 var api = null;
 var songs = [];
@@ -16,11 +51,12 @@ var shuffle = false;
 var disable = false;
 
 var dom = {
+    prefix: 'YTRE',
     title: null,
     description: null,
     container: null,
     playerContainer: null,
-    name: null,
+    songName: null,
     prevBtn: null,
     nextBtn: null,
     loopBtn: null,
@@ -66,7 +102,7 @@ function setup(attempt = 0){
     }
 
     // get player
-    var _api = document.getElementById('movie_player');
+    var _api = $id('movie_player');
     if (_api.getCurrentTime === undefined) {
         window.setTimeout(setup, 1000, attempt++);
         console.warn('YTRE INIT: retry (player not found)');
@@ -75,13 +111,10 @@ function setup(attempt = 0){
     api = _api;
 
     // get DOM elements
-    dom.title = $('h1.watch-title-container');
-    dom.description = $('p#eow-description');
+    dom.title = $elem('h1.watch-title-container');
+    dom.description = $elem('p#eow-description');
 
-    if (
-        !dom.title.length || 
-        !dom.description.length
-    ) {
+    if (!dom.title || !dom.description) {
         console.error('YTRE INIT: fail (DOM elements missing)');
         return;
     }
@@ -95,8 +128,9 @@ function setup(attempt = 0){
 
     // create DOM elements
     var btnClasses = 'class="yt-uix-button yt-uix-button-default yt-uix-button-size-default"';
-    dom.title.after(`
-        <div id="YoutubeRandomiserExtension">
+    //Stands for 'YouTube Randomiser Extension'
+    dom.container = $html(`
+        <div id="YTRE">
             <div id="YTREPlayerContainer">
                 <div style="margin: 5px;">
                     <b>Now Playing : </b>
@@ -115,64 +149,49 @@ function setup(attempt = 0){
                 </table>
             </div>
         </div>
-    `);
-    dom.container = $('#YoutubeRandomiserExtension');
-    dom.tableContainer = $('#YTRETableContainer');
-    dom.playerContainer = $('#YTREPlayerContainer');
-    dom.table = $('#YTRETable');
-    dom.songName = $('#YTRESongName');
-    dom.prevBtn = $('#YTREPrevBtn');
-    dom.nextBtn = $('#YTRENextBtn');
-    dom.loopBtn = $('#YTRELoopBtn');
-    dom.shuffleBtn = $('#YTREShuffleBtn');
-    dom.disableBtn = $('#YTREDisableBtn');
+    `)[0];
+    dom.title.parentNode.insertBefore(dom.container, dom.title.nextSibling);
+    dom.tableContainer = $id('YTRETableContainer');
+    dom.playerContainer = $id('YTREPlayerContainer');
+    dom.table = $id('YTRETable');
+    dom.songName = $id('YTRESongName');
+    dom.prevBtn = $id('YTREPrevBtn');
+    dom.nextBtn = $id('YTRENextBtn');
+    dom.loopBtn = $id('YTRELoopBtn');
+    dom.shuffleBtn = $id('YTREShuffleBtn');
+    dom.disableBtn = $id('YTREDisableBtn');
 
-    if (
-        !dom.container.length || 
-        !dom.tableContainer.length || 
-        !dom.playerContainer.length || 
-        !dom.table.length ||
-        !dom.songName.length ||
-        !dom.prevBtn.length ||
-        !dom.nextBtn.length ||
-        !dom.loopBtn.length ||
-        !dom.shuffleBtn.length
-    ) {
-        console.error('YTRE INIT: fail (DOM create failed)');
-        return;
+    // check DOM integrity
+    for (var key in dom) {
+        if (!dom[key]) {
+            console.error('YTRE INIT: fail (DOM create failed for '+key+')');
+            return;
+        }
     }
 
-    // populate songs table
+    // populate song table
     createSongTable();
 
-    // bind songs table events
-    //TODO...
+    // bind song table events
+    tableBind();
 
-    // bind normal button events
-    //TODO...
-
-    //$(div).html(s)
-    //$(div).append(s)
-    //$(div).before(s)
-    //$(div).after(s)
+    // bind standalone button events
+    bind();
 
     loaded = true;
     console.info('YTRE INIT: done!');
-    bind();
-    tableBind();
-    testEvents();
     ticker();
 }
 
 function bind() {
     // click events
 
-    dom.loopBtn.on('click', function(e){
+    $bind(dom.loopBtn, 'click', function(e){
         loop = !loop;
-        dom.loopBtn.css('background-color', loop ? 'lightgray' : '');
+        dom.loopBtn.style['background-color'] = loop ? 'lightgray' : '';
     });
 
-    dom.shuffleBtn.on('click', function(e){
+    $bind(dom.shuffleBtn, 'click', function(e){
         shuffle = !shuffle;
         setOrder(shuffle);
         purgeBuildTable();
@@ -180,20 +199,29 @@ function bind() {
         wasTime = -1;
         api.seekTo(songs[0].startTime, true);
         dom.shuffleBtn.css('background-color', shuffle ? 'lightgray' : '');
+        dom.shuffleBtn.style['background-color'] = shuffle ? 'lightgray' : '';
     });
 
-    dom.disableBtn.on('click', function(e){
+    $bind(dom.disableBtn, 'click', function(e){
         disable = !disable;
-        dom.disableBtn.css('background-color', disable ? 'lightgray' : '');
-        dom.table.css('color', disable ? 'lightgray' : 'black');
-        dom.title.css('color', disable ? 'black' : 'lightgray');
-        disable ? dom.prevBtn.attr('disabled', 'true') : dom.prevBtn.removeAttr('disabled');
-        disable ? dom.nextBtn.attr('disabled', 'true') : dom.nextBtn.removeAttr('disabled');
-        disable ? dom.shuffleBtn.attr('disabled', 'true') : dom.shuffleBtn.removeAttr('disabled');
-        disable ? dom.loopBtn.attr('disabled', 'true') : dom.loopBtn.removeAttr('disabled');
+        dom.disableBtn.style['background-color'] = disable ? 'lightgray' : '';
+        dom.table.style['color'] = disable ? 'lightgray' : 'black';
+        dom.title.style['color'] = disable ? 'black' : 'lightgray';
+        if (disable) {
+            dom.prevBtn   .setAttribute('disabled', 'true');
+            dom.nextBtn   .setAttribute('disabled', 'true');
+            dom.shuffleBtn.setAttribute('disabled', 'true');
+            dom.loopBtn   .setAttribute('disabled', 'true');
+        }
+        else {
+            dom.prevBtn   .removeAttribute('disabled');
+            dom.nextBtn   .removeAttribute('disabled');
+            dom.shuffleBtn.removeAttribute('disabled');
+            dom.loopBtn   .removeAttribute('disabled');
+        }
     });
 
-    dom.prevBtn.on('click', function(e){
+    $bind(dom.prevBtn, 'click', function(e){
 
         var time = api.getCurrentTime();
         var endTime = api.getDuration();
@@ -228,7 +256,7 @@ function bind() {
         }
     });
 
-    dom.nextBtn.on('click', function(e){
+    $bind(dom.nextBtn, 'click', function(e){
 
         var time = api.getCurrentTime();
         var endTime = api.getDuration();
@@ -262,12 +290,10 @@ function bind() {
             showPlayingSong(playing);
         }
     });
-
-    
 }
 
 function tableBind(){
-	$('.playNow').on('click', function(e) {
+	$bind('#YTRE .playNow', 'click', function(e) {
     	var idx = e.target.parentElement.parentElement.getAttribute('id').substring(4);
     	for (i = 0; i < songs.length; i++) {
     		if (idx == songs[i].idx) {
@@ -276,7 +302,7 @@ function tableBind(){
     	}
     });
 
-    $('.moveUp').on('click', function(e) {   	
+    $bind('#YTRE .moveUp', 'click', function(e) {   	
     	var idx = e.target.parentElement.parentElement.getAttribute('id').substring(4);
     	for (i = 1; i < songs.length; i++) {
     		if (idx == songs[i].idx) {
@@ -292,7 +318,7 @@ function tableBind(){
     	}
     });
 
-    $('.moveDown').on('click', function(e) {
+    $bind('#YTRE .moveDown', 'click', function(e) {
     	var idx = e.target.parentElement.parentElement.getAttribute('id').substring(4);
 
     	for (i = 0; i < songs.length - 1; i++) {
@@ -350,8 +376,8 @@ function init() {
 function getSongs() {
 
     // get description parts
-    var s = '<p>' + dom.description[0].outerHTML.split('<br>').join('</p><p>') + '</p>';
-    var d = $.parseHTML(s);
+    var s = '<p>' + dom.description.outerHTML.split('<br>').join('</p><p>') + '</p>';
+    var d = $html(s);
     var duration = api.getDuration();
 
     if (!duration) {
@@ -361,21 +387,28 @@ function getSongs() {
 
     songList = [];
     d.forEach(function(p, i){
-        var a = $(p).find('a[href="#"]');
-        if (!a.length) return;
+        var a = p.querySelector('a[href="#"]');
+        if (!a) return;
 
         // get start time
-        var timeSplit = a[0].text.split(":");
+        var timeStr = a.innerHTML;
+        var timeSplit = timeStr.split(":");
         var timeSplitLen = timeSplit.length;
         var startTime = 0;
         for (i = 0; i < timeSplitLen; i++) {
             startTime += parseInt(timeSplit[i])*Math.pow(60,timeSplitLen-1-i);
         }
 
-        // get song name
-        var name = $(p).contents().filter(function() {
-            return this.nodeType == 3;
-        }).text() || 'Unknown Song';
+        // get song name (text nodes only - ignore contents of <a> etc)
+        var name = $childNodes(p)
+            .filter(function(x){ return x.nodeType == 3; })
+            .map(function(x){ return x.nodeValue; })
+            .join(' ');
+
+        if (!name) {
+            name = 'Unknown Song';
+            console.warning('YTRE INIT: empty song name @'+timeStr);
+        }
 
         var song = {
             idx: songList.length,
@@ -389,7 +422,7 @@ function getSongs() {
         songList[i].endTime = songList[i+1].startTime;
     }
 
-    console.log(songList);
+    console.table(songList);
     return songList;
 }
 
@@ -433,14 +466,14 @@ function setOrder(shuffle) {
 }
 
 function purgeBuildTable() {
-	dom.table[0].innerHTML="";
+	dom.table.innerHTML="";
 	createSongTable();
 	tableBind();
 }
 
 function createSongTable() {
 	for (i = 0; i < songs.length; i++) {
-		var row = dom.table[0].insertRow(-1);
+		var row = dom.table.insertRow(-1);
 		var cell0 = row.insertCell(0);
 		var cell1 = row.insertCell(1);
 		var cell2 = row.insertCell(2);
@@ -453,9 +486,9 @@ function createSongTable() {
 		}
 		cell0.innerHTML = songs[i].name;
 		cell1.innerHTML = lenMin+":"+lenSec;
-		cell2.innerHTML = "<span class='playNow'>\u25B6</span>"+
-							"<span class='moveUp'>\u2227</span>"+
-							"<span class='moveDown'>\u2228</span>";
+		cell2.innerHTML = "<span class='playNow' >\u25B6</span>"+
+						  "<span class='moveUp'  >\u2227</span>"+
+			              "<span class='moveDown'>\u2228</span>";
 	}
 }
 
@@ -465,19 +498,18 @@ function setNowPlaying() {
     var endTime = api.getDuration();
 	var playing = getCurrentSongIndex(time);
 
-    // small time jump; different but defined song
+    // on sub-second time jump && song state change (any change)
     if (
         (((Math.abs(time - wasTime) < 0.5) && (playing !== wasPlaying)) ||
           (Math.abs(time - endTime) < 0.5)) &&
           !disable
-    )
-    {
-        //set playing to the 'next' song; move the player
-
+    ){
+        //step to the next song
         if (wasPlaying < songs.length - 1) {
             playing = wasPlaying + 1;
         }
         else {
+            //special conditions for looping
             if (loop) {
                 playing = 0;
             }
@@ -496,13 +528,12 @@ function setNowPlaying() {
         api.seekTo(seekTime, true);
     }
 
-    // different but defined song
+    // on song state change (to a real song)
     if (
         (playing !== undefined) &&
         (playing !== -1) &&
         (playing !== wasPlaying)
-    )
-    {
+    ){
         showPlayingSong(playing);
     }
 
@@ -512,36 +543,23 @@ function setNowPlaying() {
 
 function showPlayingSong(playing) {
     //update songName
-    dom.songName.text(songs[playing].name);
-    dom.songName.animate( 
-        {opacity:0}, 
-        200, 
-        "linear", 
-        function(){
-            $(this).animate({opacity:1},200);
-        })
+    dom.songName.innerHTML = songs[playing].name;
+
+    //animate songName
+    dom.songName.classList.remove('animate-flash');
+    setTimeout(function() {
+        dom.songName.classList.add('animate-flash');
+    }, 20);
 
     //update table
     for (i = 0; i < songs.length; i++) {
         var idx = songs[i].idx;
-        $('#song'+idx).removeClass("currentSong");
+        var row = $id('song'+idx);
+        row.classList.remove("currentSong");
         if (playing == i) {
-            $('#song'+idx).addClass("currentSong");
+            row.classList.add("currentSong");
         }
     }
 }
 
-function testEvents() {
-    // run test code here
-}
-
 init();
-
-/*
-    Major features todo:
-        ...
-        - implement on/off button to hide the video player
-        - implement on/off checkbox for the extension menu. 'refresh to see changes'
-        - implement destroy() when you switch pages
-        - drag n drop
-*/

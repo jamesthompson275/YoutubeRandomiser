@@ -49,11 +49,14 @@ var wasTime = -1;
 var loop = false;
 var shuffle = false;
 var disable = false;
+var video = true;
 
 var dom = {
     prefix: 'YTRE',
     title: null,
     description: null,
+    vplayer: null,
+    pplayer: null,
     container: null,
     playerContainer: null,
     songName: null,
@@ -62,6 +65,7 @@ var dom = {
     loopBtn: null,
     shuffleBtn: null,
     disableBtn: null,
+    videoBtn: null,
     tableContainer: null,
     table: null
 };
@@ -113,8 +117,10 @@ function setup(attempt = 0){
     // get DOM elements
     dom.title = $elem('h1.watch-title-container');
     dom.description = $elem('p#eow-description');
+    dom.vplayer = $elem('div#player');
+    dom.pplayer = $elem('div#placeholder-player');
 
-    if (!dom.title || !dom.description) {
+    if (!dom.title || !dom.description || !dom.vplayer || !dom.pplayer) {
         console.error('YTRE INIT: fail (DOM elements missing)');
         return;
     }
@@ -128,6 +134,7 @@ function setup(attempt = 0){
 
     // create DOM elements
     var btnClasses = 'class="yt-uix-button yt-uix-button-default yt-uix-button-size-default"';
+    var btnStyle = 'style="background-color: lightgray"';
     //Stands for 'YouTube Randomiser Extension'
     dom.container = $html(`
         <div id="YTRE">
@@ -137,11 +144,12 @@ function setup(attempt = 0){
                     <span id="YTRESongName" style="margin: 10px"> ... </span>
                 </div>
                 <div>
-                    <button `+btnClasses+` id="YTREPrevBtn">    |<<    </button>
-                    <button `+btnClasses+` id="YTRENextBtn">    >>|    </button>
+                    <button `+btnClasses+` id="YTREPrevBtn">    |\u25C0 </button>
+                    <button `+btnClasses+` id="YTRENextBtn">    \u25B6| </button>
                     <button `+btnClasses+` id="YTREShuffleBtn"> shuffle </button>
                     <button `+btnClasses+` id="YTRELoopBtn">    loop    </button>
                     <button `+btnClasses+` id="YTREDisableBtn"> disable </button>
+                    <button `+btnClasses+` id="YTREVideoBtn" `+btnStyle+`> video </button>
                 </div>
             </div>
             <div id="YTRETableContainer">
@@ -160,6 +168,7 @@ function setup(attempt = 0){
     dom.loopBtn = $id('YTRELoopBtn');
     dom.shuffleBtn = $id('YTREShuffleBtn');
     dom.disableBtn = $id('YTREDisableBtn');
+    dom.videoBtn = $id('YTREVideoBtn');
 
     // check DOM integrity
     for (var key in dom) {
@@ -219,6 +228,16 @@ function bind() {
             dom.shuffleBtn.removeAttribute('disabled');
             dom.loopBtn   .removeAttribute('disabled');
         }
+    });
+
+    $bind(dom.videoBtn, 'click', function(e){
+        var scrollHt = dom.pplayer.clientHeight;
+        video = !video;
+        dom.videoBtn.style['background-color'] = video ? 'lightgray' : '';
+        dom.pplayer.style['display'] = video ? '' : 'none';
+        dom.vplayer.style['display'] = video ? '' : 'none';
+        if (video) scrollHt = dom.pplayer.clientHeight;
+        window.scrollBy(0, (video ? 1 : -1) * scrollHt);
     });
 
     $bind(dom.prevBtn, 'click', function(e){

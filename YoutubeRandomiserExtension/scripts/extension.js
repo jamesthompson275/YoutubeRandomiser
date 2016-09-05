@@ -187,6 +187,9 @@ function setup(attempt = 0){
     // bind standalone button events
     bind();
 
+    // apply CSS to YouTube's elements
+    dom.title.style['color'] = 'lightgray';
+
     loaded = true;
     console.info('YTRE INIT: done!');
     ticker();

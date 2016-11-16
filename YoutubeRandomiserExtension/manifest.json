@@ -3,7 +3,7 @@
 
 	"name": "YouTube Randomiser",
 	"description": "Shuffle YouTube albums.",
-	"version": "0.8.0",
+	"version": "0.8.1",
 
 	"icons": { 
 		"128": "images/icon.png" 

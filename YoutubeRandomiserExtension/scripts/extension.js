@@ -210,7 +210,7 @@ function bind() {
         wasPlaying = -1;
         wasTime = -1;
         api.seekTo(songs[0].startTime, true);
-        dom.shuffleBtn.css('background-color', shuffle ? 'lightgray' : '');
+        //dom.shuffleBtn.css('background-color', shuffle ? 'lightgray' : '');
         dom.shuffleBtn.style['background-color'] = shuffle ? 'lightgray' : '';
     });
 
@@ -545,9 +545,11 @@ function setNowPlaying() {
                 return;
             }
         }
-        //move the player
-        var seekTime = songs[playing].startTime;
-        api.seekTo(seekTime, true);
+        //move the player if necessary
+        if (songs[playing].idx != songs[wasPlaying].idx + 1) {
+            var seekTime = songs[playing].startTime;
+            api.seekTo(seekTime, true);
+        }
     }
 
     // on song state change (to a real song)
